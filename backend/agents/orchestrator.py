@@ -8,6 +8,9 @@ from agents.tool_agent import tool_agent
 from agents.analyst import analyst_agent
 from agents.explainer import explainer_agent
 from agents.memory import memory_agent
+from agents.preprocessor import preprocessor_agent
+from agents.postprocessor import postprocessor_agent
+from agents.statistical_agent import statistical_agent
 from models.schemas import QueryRecord, DatasetMeta, ToolResult
 
 
@@ -18,7 +21,12 @@ class Orchestrator:
         start_time = time.time()
         query_id = str(uuid.uuid4())
 
-        # 1. Planning
+        # 1. Pre-process the DataFrame
+        yield {"event": "agent_start", "agent": "preprocessor"}
+        df = preprocessor_agent.clean(df)
+        yield {"event": "agent_done", "agent": "preprocessor"}
+
+        # 2. Planning
         yield {"event": "agent_start", "agent": "planner"}
         plan = await planner_agent.plan(query, dataset_meta)
         yield {"event": "agent_done", "agent": "planner", "output": plan.model_dump()}
@@ -39,6 +47,10 @@ class Orchestrator:
             elif step.agent == "analyst":
                 if tool_result:
                     analysis = await analyst_agent.analyze(query, tool_result)
+                    # Post-process: apply business-rule checks
+                    analysis = postprocessor_agent.refine(
+                        analysis, tool_result.metrics if tool_result else None
+                    )
                     yield {"event": "agent_done", "agent": "analyst", "output": analysis}
                 else:
                     yield {"event": "agent_error", "agent": "analyst", "error": "No tool result to analyse"}

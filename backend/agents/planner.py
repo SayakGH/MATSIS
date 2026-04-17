@@ -28,6 +28,67 @@ _PLANS = {
         PlanStep(agent="analyst", task="interpret", params={}),
         PlanStep(agent="explainer", task="explain", params={}),
     ],
+    "correlation": [
+        PlanStep(agent="tool", task="correlation", params={"method": "pearson"}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    "rolling_stats": [
+        PlanStep(agent="tool", task="rolling_stats", params={"window": 7}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    "peak_detection": [
+        PlanStep(agent="tool", task="peak_detection", params={"order": 3}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    "regression": [
+        PlanStep(agent="tool", task="regression", params={}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    "clustering": [
+        PlanStep(agent="tool", task="clustering", params={"n_clusters": 3}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    # Statistical tests
+    "outlier_detection": [
+        PlanStep(agent="tool", task="outlier_detection", params={"method": "iqr"}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    "stationarity_test": [
+        PlanStep(agent="tool", task="stationarity_test", params={}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    "statistical_correlation": [
+        PlanStep(agent="tool", task="statistical_correlation", params={"method": "pearson"}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    "one_sample_ttest": [
+        PlanStep(agent="tool", task="one_sample_ttest", params={"pop_mean": 0}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    "two_sample_ttest": [
+        PlanStep(agent="tool", task="two_sample_ttest", params={"equal_var": False}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    "runs_test": [
+        PlanStep(agent="tool", task="runs_test", params={}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
+    "entropy": [
+        PlanStep(agent="tool", task="entropy", params={"bins": 10}),
+        PlanStep(agent="analyst", task="interpret", params={}),
+        PlanStep(agent="explainer", task="explain", params={}),
+    ],
 }
 
 _INTENT_KEYWORDS = {
@@ -35,6 +96,19 @@ _INTENT_KEYWORDS = {
     "anomaly_detection": ["anomal", "outlier", "unusual", "spike", "detect", "abnormal"],
     "decomposition": ["decompos", "seasonal", "trend", "component", "period"],
     "summary": ["summar", "describe", "max", "min", "mean", "average", "statistic", "about", "what"],
+    "correlation": ["correlat", "relationship", "related", "autocorr", "lag"],
+    "rolling_stats": ["rolling", "moving", "sliding", "window", "7-day", "weekly average"],
+    "peak_detection": ["peak", "valley", "trough", "maxima", "minima", "local max", "local min"],
+    "regression": ["regression", "linear", "trend line", "slope", "r-squared", "r2", "fit"],
+    "clustering": ["cluster", "segment", "group", "k-means", "kmeans", "dbscan"],
+    # Statistical tests
+    "outlier_detection": ["outlier", "anomaly", "spike", "extreme", "deviation"],
+    "stationarity_test": ["stationar", "trend stationary", "diffuse", "random walk"],
+    "statistical_correlation": ["correlat", "relationship", " association", "dependency"],
+    "one_sample_ttest": ["t-test", "one sample", "population mean", "compare to"],
+    "two_sample_ttest": ["two sample", "independent", "compare two", "group a", "group b"],
+    "runs_test": ["runs", "randomness", "random", "pattern", "series"],
+    "entropy": ["entropy", "randomness", "uncertainty", "information"],
 }
 
 
@@ -53,9 +127,10 @@ class PlannerAgent:
 
     async def plan(self, query: str, dataset_meta: DatasetMeta) -> PlanSchema:
         # Ask the LLM only for a single intent word — much more reliable with small models
+        valid_intents = ", ".join(_PLANS.keys())
         prompt = (
-            "Classify the following data analysis query into exactly ONE of these intents: "
-            "forecast, anomaly_detection, decomposition, summary.\n\n"
+            f"Classify the following data analysis query into exactly ONE of these intents: "
+            f"{valid_intents}.\n\n"
             f"Query: \"{query}\"\n\n"
             "Reply with only the intent word, nothing else:"
         )

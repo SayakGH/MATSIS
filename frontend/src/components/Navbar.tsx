@@ -9,7 +9,7 @@ export const Navbar: React.FC = () => {
     <header className="h-16 border-b border-slate-800 flex items-center justify-between px-6 glass z-10">
       <div className="flex items-center gap-2">
         <Activity className="w-6 h-6 text-indigo-500" />
-        <h1 className="text-xl font-bold tracking-tight">MATSIS <span className="text-xs font-normal text-slate-500 ml-2">v1.0</span></h1>
+        <h1 className="text-xl font-bold tracking-tight">Multi-Agent Autonomous Time Series Intelligence System (MATSIS)<span className="text-xs font-normal text-slate-500 ml-2">v1.0</span></h1>
       </div>
       
       <div className="flex items-center gap-4">
