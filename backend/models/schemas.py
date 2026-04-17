@@ -42,5 +42,6 @@ class QueryRecord(BaseModel):
     tool_result: Optional[Dict[str, Any]] = None
     analysis: Optional[Dict[str, Any]] = None
     explanation: Optional[str] = None
+    follow_up_suggestions: List[str] = []          # powered by analyst output
     latency_ms: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)

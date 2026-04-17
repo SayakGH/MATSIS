@@ -1,7 +1,9 @@
 import asyncio
+import copy
 from llm.ollama_client import ollama_client
 from config import settings
 from models.schemas import PlanSchema, DatasetMeta, PlanStep
+from agents.query_interpreter import query_interpreter
 import logging
 
 logger = logging.getLogger(__name__)
@@ -155,10 +157,19 @@ class PlannerAgent:
             intent = _keyword_intent(query)
             logger.error(f"Planner error: {e} — using keyword intent '{intent}'")
 
+        # ── Override hardcoded params with NL-extracted ones ────────────────
+        extracted = await query_interpreter.extract_params(query, intent)
+        steps = copy.deepcopy(_PLANS[intent])
+        if extracted:
+            for step in steps:
+                if step.agent == "tool":
+                    step.params = {**step.params, **extracted}
+                    logger.info(f"Planner: overriding params → {step.params}")
+
         target_col = dataset_meta.value_cols[0] if dataset_meta.value_cols else None
         return PlanSchema(
             intent=intent,
-            steps=_PLANS[intent],
+            steps=steps,
             target_column=target_col,
         )
 

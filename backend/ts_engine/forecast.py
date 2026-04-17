@@ -9,6 +9,8 @@ logger = logging.getLogger(__name__)
 def prophet_forecast(df: pd.DataFrame, horizon: int, freq: str = "D") -> ToolResult:
     try:
         pdf = df[['timestamp', 'value']].rename(columns={"timestamp": "ds", "value": "y"})
+        # Prophet requires timezone-naive datetimes — strip tz if present
+        pdf['ds'] = pd.to_datetime(pdf['ds'], errors='coerce').dt.tz_localize(None)
         model = Prophet(seasonality_mode="multiplicative", yearly_seasonality=True)
         model.fit(pdf)
         future = model.make_future_dataframe(periods=horizon, freq=freq)
