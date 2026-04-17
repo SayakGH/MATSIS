@@ -7,6 +7,7 @@ import os
 import json
 from models.schemas import DatasetMeta
 from agents.orchestrator import orchestrator
+from agents.query_interpreter import resolve_target_column
 from db.connections import db_manager
 from config import settings
 
@@ -74,8 +75,22 @@ async def query_websocket(websocket: WebSocket, session_id: str):
 
             df = pd.read_csv(file_path)
             df[meta.timestamp_col] = pd.to_datetime(df[meta.timestamp_col], errors="coerce")
-            value_col = meta.value_cols[0] if meta.value_cols else df.select_dtypes("number").columns[0]
-            df_ready = df.rename(columns={meta.timestamp_col: "timestamp", value_col: "value"})
+
+            # ── Smart column selection ──────────────────────────────────────
+            # Resolve which value column the user is asking about,
+            # then rename it to canonical "value" for the pipeline.
+            # All other numeric columns stay in df so correlation/clustering
+            # tools can access them via df.select_dtypes(include='number').
+            resolved_col = await resolve_target_column(query, meta.value_cols)
+            rename_map = {meta.timestamp_col: "timestamp", resolved_col: "value"}
+            df_ready = df.rename(columns=rename_map)
+
+            # Ensure the resolved column is sent as event so the frontend can show it
+            await websocket.send_json({
+                "event": "column_resolved",
+                "column": resolved_col,
+                "all_columns": meta.value_cols,
+            })
 
             # 3. Stream agent pipeline events
             try:

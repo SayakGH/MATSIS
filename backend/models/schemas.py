@@ -20,6 +20,7 @@ class PlanSchema(BaseModel):
     intent: str
     steps: List[PlanStep]
     target_column: Optional[str] = None
+    resolved_column: Optional[str] = None   # actual column selected from multi-col dataset
     time_window: Optional[str] = None
 
 class ToolResult(BaseModel):
