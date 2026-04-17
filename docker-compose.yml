@@ -1,0 +1,68 @@
+services:
+
+  # ─── MongoDB ───────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend (FastAPI) ─────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379
+      # Ollama runs on the host — host.docker.internal bridges the host network
+      OLLAMA_URL: http://host.docker.internal:11434
+      DATA_DIR: /app/backend/data
+    volumes:
+      - backend_data:/app/backend/data
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ─── Frontend (Nginx + React build) ────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mongo_data:
+  backend_data:

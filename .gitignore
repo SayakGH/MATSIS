@@ -1,0 +1,60 @@
+# ================================
+# Python (Backend)
+# ================================
+backend/__pycache__/
+backend/*.py[cod]
+backend/.venv/
+backend/venv/
+backend/env/
+
+# ================================
+# ML / Data
+# ================================
+backend/data/
+backend/datasets/
+*.csv
+*.pkl
+*.joblib
+*.pt
+*.h5
+
+# Allow sample file
+!backend/sample_data.csv
+
+# ================================
+# Logs & Cache
+# ================================
+*.log
+.cache/
+__pycache__/
+
+# ================================
+# Environment Variables
+# ================================
+.env
+.env.*
+
+# ================================
+# Frontend (React)
+# ================================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# ================================
+# IDE / OS
+# ================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ================================
+# Docker
+# ================================
+docker-compose.override.yml
+
+# ================================
+# Misc
+# ================================
+*.sqlite3
